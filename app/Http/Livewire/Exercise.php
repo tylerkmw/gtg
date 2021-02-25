@@ -10,17 +10,17 @@ class Exercise extends Component
 {
 
     public $exercise;
-    public $repsToday;
-    public $repsInSet;
-    public $timeSinceLastSet;
+    public $reps_today;
+    public $reps_in_set;
+    public $time_since_last_set;
 
     public function mount()
     {
         // Initialize the reps in set input on the front-end to the last amount used (stored in the database)
-        $this->repsInSet = $this->exercise->reps_in_set;
+        $this->reps_in_set = $this->exercise->reps_in_set;
 
-        $this->getTotalRepsToday();
-        $this->updateTimeSinceLastSet();
+        $this->getRepsToday();
+        $this->getTimeSinceLastSet();
     }
 
     public function render()
@@ -28,25 +28,25 @@ class Exercise extends Component
         return view('livewire.exercise');
     }
 
-    public function updateTimeSinceLastSet()
+    public function getTimeSinceLastSet()
     {
         // Grab the most recent set of this exercise
         $set = $this->exercise->sets()->latest()->first();
-        $this->timeSinceLastSet = $set->created_at->diffForHumans();
+        $this->time_since_last_set = $set->created_at->diffForHumans();
     }
 
-    public function getTotalRepsToday()
+    public function getRepsToday()
     {
         /* Calculate the number of reps performed today */
         $date = new \DateTime('today');
-        $this->repsToday = $this->exercise->sets()->whereDate('created_at', Carbon::today())->sum('reps');
+        $this->reps_today = $this->exercise->sets()->whereDate('created_at', Carbon::today())->sum('reps');
     }
 
     public function updatedRepsInSet()
     {
         /* If the number of reps is not empty, update the exercise reps_in_set value */
-        if(!empty($this->repsInSet)) {
-            $this->exercise->update(['reps_in_set' => $this->repsInSet]);
+        if(!empty($this->reps_in_set)) {
+            $this->exercise->update(['reps_in_set' => $this->reps_in_set]);
         }
     }
 
@@ -55,10 +55,10 @@ class Exercise extends Component
         /* Add a new set with the number of reps specified */
         Set::create([
             'exercise_id' => $this->exercise->id,
-            'reps' => $this->repsInSet
+            'reps' => $this->reps_in_set
         ]);
 
-        $this->getTotalRepsToday();
-        $this->updateTimeSinceLastSet();
+        $this->getRepsToday();
+        $this->getTimeSinceLastSet();
     }
 }
