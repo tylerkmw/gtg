@@ -2,22 +2,25 @@
 
 namespace App\Http\Livewire;
 
-use Livewire\Component;
+use Carbon\Carbon;
 use \App\Models\Set;
+use Livewire\Component;
 
 class Exercise extends Component
 {
 
     public $exercise;
-    public $reps;
     public $repsToday;
-    public $time;
+    public $repsInSet;
+    public $timeSinceLastSet;
 
     public function mount()
     {
-        $this->reps = $this->exercise->reps_in_set;
+        // Initialize the reps in set input on the front-end to the last amount used (stored in the database)
+        $this->repsInSet = $this->exercise->reps_in_set;
+
         $this->getTotalRepsToday();
-        $this->updateTime();
+        $this->updateTimeSinceLastSet();
     }
 
     public function render()
@@ -25,35 +28,25 @@ class Exercise extends Component
         return view('livewire.exercise');
     }
 
-    public function updateTime()
+    public function updateTimeSinceLastSet()
     {
-        /* Find the most recent set */
-        $set = Set::where('exercise_id', $this->exercise->id)->orderBy('id', 'desc')->first();
-        $start = \Carbon\Carbon::parse($set->created_at);
-        $end = \Carbon\Carbon::now();
-        $totalDuration = $end->diffForHumans($start);
-        $this->time = $totalDuration;
-        // dd($totalDuration);
+        // Grab the most recent set of this exercise
+        $set = $this->exercise->sets()->latest()->first();
+        $this->timeSinceLastSet = $set->created_at->diffForHumans();
     }
 
     public function getTotalRepsToday()
     {
         /* Calculate the number of reps performed today */
         $date = new \DateTime('today');
-        $sets = $this->exercise->sets()->where('created_at', '>=', $date->format('Y-m-d 00:00:00'))->where('created_at', '<=', $date->format('Y-m-d 23:59:59'))->get();
-        $count = 0;
-        foreach($sets as $set) {
-            $count += $set->reps;
-        }
-        $this->repsToday = $count;
+        $this->repsToday = $this->exercise->sets()->whereDate('created_at', Carbon::today())->sum('reps');
     }
 
-    public function updatedReps()
+    public function updatedRepsInSet()
     {
         /* If the number of reps is not empty, update the exercise reps_in_set value */
-        if(!empty($this->reps)) {
-            $this->exercise->reps_in_set = $this->reps;
-            $this->exercise->save();
+        if(!empty($this->repsInSet)) {
+            $this->exercise->update(['reps_in_set' => $this->repsInSet]);
         }
     }
 
@@ -62,10 +55,10 @@ class Exercise extends Component
         /* Add a new set with the number of reps specified */
         Set::create([
             'exercise_id' => $this->exercise->id,
-            'reps' => $this->reps
+            'reps' => $this->repsInSet
         ]);
 
         $this->getTotalRepsToday();
-        $this->updateTime();
+        $this->updateTimeSinceLastSet();
     }
 }
