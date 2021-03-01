@@ -31,13 +31,17 @@ class Exercise extends Component
     public function getTimeSinceLastSet()
     {
         $set = $this->exercise->sets->last();
-        $this->timeSinceLastSet = $set->created_at->diffForHumans();
+
+        $this->timeSinceLastSet = ($set) ? 'Last set ' . $set->created_at->diffForHumans() : 'No sets yet!';
     }
 
     public function getRepsToday()
     {
         $today = Carbon::today();
-        $this->repsToday = $this->exercise->sets->where('created_at', '>=', $today->startOfDay())->where('created_at', '<=', $today->endOfDay())->sum('reps');
+        $this->repsToday = $this->exercise->sets
+            ->where('created_at', '>=', $today->startOfDay())
+            ->where('created_at', '<=', $today->endOfDay())
+            ->sum('reps');
     }
 
     public function updatedRepsInSet()
