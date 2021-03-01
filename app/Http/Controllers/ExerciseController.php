@@ -14,7 +14,7 @@ class ExerciseController extends Controller
      */
     public function index()
     {
-        return view('exercises.index', ['exercises' => Exercise::all()]);
+        return view('exercises.index', ['exercises' => Exercise::with('sets')->get()]);
     }
 
     /**

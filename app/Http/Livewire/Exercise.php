@@ -30,13 +30,14 @@ class Exercise extends Component
 
     public function getTimeSinceLastSet()
     {
-        $set = $this->exercise->sets()->latest()->first();
+        $set = $this->exercise->sets->last();
         $this->timeSinceLastSet = $set->created_at->diffForHumans();
     }
 
     public function getRepsToday()
     {
-        $this->repsToday = $this->exercise->sets()->whereDate('created_at', Carbon::today())->sum('reps');
+        $today = Carbon::today();
+        $this->repsToday = $this->exercise->sets->where('created_at', '>=', $today->startOfDay())->where('created_at', '<=', $today->endOfDay())->sum('reps');
     }
 
     public function updatedRepsInSet()
@@ -53,6 +54,9 @@ class Exercise extends Component
             'exercise_id' => $this->exercise->id,
             'reps' => $this->repsInSet
         ]);
+
+        // Refresh the model in Livewire since we eager loaded this exercise
+        $this->exercise = $this->exercise->refresh();
 
         $this->getRepsToday();
         $this->getTimeSinceLastSet();
