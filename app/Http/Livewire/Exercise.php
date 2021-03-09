@@ -14,6 +14,9 @@ class Exercise extends Component
     public $repsInSet;
     public $timeSinceLastSet;
 
+    public $bankAccount = 'ffjsaiofjsa';
+    public $bank = ['account' => '1329123'];
+
     public function mount()
     {
         // Store the reps_in_set from the exericse model in public property for wire:model binding
@@ -21,6 +24,11 @@ class Exercise extends Component
 
         $this->getRepsToday();
         $this->getTimeSinceLastSet();
+    }
+
+    public function updatedBankAccount()
+    {
+        dd('caught');
     }
 
     public function render()
